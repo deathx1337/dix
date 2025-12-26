@@ -122,7 +122,7 @@ def attempt_login(user_id, pw):
                     lvl = 'Poor'
                     ern = '1 BDT'
                 
-                # আউটপুট igx.py এর মতো
+                # ব্যালেন্সের উপর ভিত্তি করে আউটপুট - igx.py এর মতো
                 try:
                     balance_int = int(balance_str)
                     if balance_int >= 10000:
@@ -221,6 +221,7 @@ def switch():
         exit(0)
     except Exception as e:
         print(f'{R} Switch check failed: {e}{D}')
+        # Continue execution if switch check fails
 
 if __name__ == '__main__':
     switch()
