@@ -91,11 +91,11 @@ def attempt_login(user_id, pw):
             if status_code == '000000':
                 uid = data.get('data', {}).get('userId')
                 uname = data.get('data', {}).get('userName')
-                balance = data.get('data', {}).get('mainWallet', 0)  # Default 0
-                level = data.get('data', {}).get('vipInfo', {}).get('nowVipName', 'Normal')
+                balance = data.get('data', {}).get('mainWallet', 'N/A')
+                level = data.get('data', {}).get('vipInfo', {}).get('nowVipName', 'N/A')
                 
-                # ব্যালেন্স ঠিক করা
-                if balance is None or balance == '' or str(balance).lower() == 'n/a':
+                # ব্যালেন্স ঠিক করা - N/A হলে 0 দেখাবে
+                if balance == 'N/A' or balance is None or balance == '':
                     balance = 0
                 
                 if level != 'Normal':
@@ -119,7 +119,6 @@ def attempt_login(user_id, pw):
                         msg = f'{BOLD}{Y} {uname} | Profile : {lvl} | Earned : {ern} {D}'
                         print(msg)
                 except (ValueError, TypeError):
-                    balance = 0
                     msg = f'{BOLD}{Y} {uname} | Profile : {lvl} | Earned : {ern} {D}'
                     print(msg)
                 
@@ -134,8 +133,6 @@ def attempt_login(user_id, pw):
             elif status_code == 'S0001':
                 print(f'{R} [!] TURN OFF YOUR DATA FOR A WHILE (API LIMIT OVER){D}')
                 time.sleep(30)
-            else:
-                print(f'{R} Login failed for {user_id}: Status {status_code}{D}')
         else:
             print(f'{R} FAILED ERROR >> {response.status}{D}')
             time.sleep(10)
